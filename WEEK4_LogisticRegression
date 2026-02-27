@@ -1,0 +1,188 @@
+# ==========================================
+# 1. Import Libraries
+# ==========================================
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    classification_report
+)
+
+# ==========================================
+# 2. Load Dataset
+# ==========================================
+df = pd.read_csv("HR_comma_sep.csv")
+
+# Rename target column to retention
+df.rename(columns={'left': 'retention'}, inplace=True)
+
+print("Columns:", df.columns)
+print(df.head())
+
+# ==========================================
+# 3. Exploratory Data Analysis
+# ==========================================
+print("\nRetention value counts:\n", df['retention'].value_counts())
+
+# To compute a correlation heatmap we must encode categories
+df_corr = df.copy()
+df_corr['Department'] = df_corr['Department'].astype('category').cat.codes
+df_corr['salary'] = df_corr['salary'].astype('category').cat.codes
+
+plt.figure(figsize=(10,8))
+sns.heatmap(df_corr.corr(), annot=True, cmap='coolwarm')
+plt.title("Correlation Heatmap (Encoded)")
+plt.show()
+
+# ==========================================
+# 4. Salary vs Retention Bar Chart
+# ==========================================
+plt.figure(figsize=(6,4))
+sns.countplot(x='salary', hue='retention', data=df)
+plt.title("Employee Retention by Salary Level")
+plt.xlabel("Salary")
+plt.ylabel("Count")
+plt.show()
+
+# ==========================================
+# 5. Department vs Retention Bar Chart
+# ==========================================
+plt.figure(figsize=(10,6))
+sns.countplot(x='Department', hue='retention', data=df)
+plt.title("Employee Retention by Department")
+plt.xticks(rotation=45)
+plt.xlabel("Department")
+plt.ylabel("Count")
+plt.show()
+
+# ==========================================
+# 6. Prepare Data for Modeling
+# ==========================================
+df_model = pd.get_dummies(df, columns=['salary', 'Department'], drop_first=True)
+
+X = df_model.drop('retention', axis=1)
+y = df_model['retention']
+
+print("\nFeature columns:\n", X.columns)
+
+# ==========================================
+# 7. Train/Test Split
+# ==========================================
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.30, random_state=42
+)
+
+# ==========================================
+# 8. Logistic Regression Model
+# ==========================================
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train, y_train)
+
+# ==========================================
+# 9. Predictions & Evaluation
+# ==========================================
+y_pred = model.predict(X_test)
+
+print("\nAccuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+
+
+
+
+
+
+# ==========================================
+# 1. Import Required Libraries
+# ==========================================
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# ==========================================
+# 2. Load Zoo Dataset
+# ==========================================
+df = pd.read_csv("zoo-data.csv")
+
+print("Dataset shape:", df.shape)
+print("Columns:", df.columns)
+print(df.head())
+
+# ==========================================
+# 3. Preprocessing
+# ==========================================
+# Drop non-numeric identifier columns (like animal name)
+if 'animal_name' in df.columns:
+    df = df.drop('animal_name', axis=1)
+
+# Ensure the class label column is numeric
+target_col = None
+for candidate in ['class_type', 'type', 'Type', 'class']:
+    if candidate in df.columns:
+        target_col = candidate
+        break
+
+if target_col is None:
+    raise ValueError("No class label column found in the dataset")
+
+# Convert class label to numeric if needed
+if df[target_col].dtype == 'object':
+    df[target_col] = df[target_col].astype('category').cat.codes
+
+print("\nTarget label column:", target_col)
+print("\nClass value counts:\n", df[target_col].value_counts())
+
+# ==========================================
+# 4. Train/Test Split
+# ==========================================
+X = df.drop(target_col, axis=1)
+y = df[target_col]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42, stratify=y
+)
+
+print("\nTraining set size:", X_train.shape)
+print("Testing set size:", X_test.shape)
+
+# ==========================================
+# 5. Train Logistic Regression Model
+# ==========================================
+model = LogisticRegression(
+    multi_class='multinomial',
+    solver='lbfgs',
+    max_iter=1000
+)
+
+model.fit(X_train, y_train)
+
+# ==========================================
+# 6. Predictions & Evaluation
+# ==========================================
+y_pred = model.predict(X_test)
+
+print("\nAccuracy Score:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# ==========================================
+# 7. Confusion Matrix
+# ==========================================
+cm = confusion_matrix(y_test, y_pred)
+
+plt.figure(figsize=(8,6))
+sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
+plt.title("Confusion Matrix (Zoo Multiclass Logistic Regression)")
+plt.xlabel("Predicted Class")
+plt.ylabel("True Class")
+plt.show()
