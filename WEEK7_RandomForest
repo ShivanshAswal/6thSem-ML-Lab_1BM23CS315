@@ -1,0 +1,63 @@
+# -----------------------------------
+# Step 1: Upload File in Google Colab
+# -----------------------------------
+from google.colab import files
+uploaded = files.upload()
+
+# Import libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
+# Load dataset
+iris = pd.read_csv("iris.csv")
+
+# Features and target
+X = iris.iloc[:, :-1]
+y = iris.iloc[:, -1]
+
+# Train-test split (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# -------------------------------
+# 1. Default Random Forest (n_estimators = 10)
+# -------------------------------
+rf_default = RandomForestClassifier(n_estimators=10, random_state=42)
+rf_default.fit(X_train, y_train)
+
+y_pred_default = rf_default.predict(X_test)
+default_accuracy = accuracy_score(y_test, y_pred_default)
+
+print("=== Default Model (n_estimators = 10) ===")
+print("Accuracy:", default_accuracy)
+
+
+# -------------------------------
+# 2. Hyperparameter Tuning
+# -------------------------------
+estimators_range = [5, 10, 20, 50, 100, 150, 200]
+best_score = 0
+best_n = 0
+
+print("\n=== Tuning Results ===")
+
+for n in estimators_range:
+    rf = RandomForestClassifier(n_estimators=n, random_state=42)
+    rf.fit(X_train, y_train)
+
+    y_pred = rf.predict(X_test)
+    score = accuracy_score(y_test, y_pred)
+
+    print(f"n_estimators = {n}, Accuracy = {score}")
+
+    if score > best_score:
+        best_score = score
+        best_n = n
+
+# Best result
+print("\n=== Best Model ===")
+print(f"Best n_estimators: {best_n}")
+print(f"Best Accuracy: {best_score}")
