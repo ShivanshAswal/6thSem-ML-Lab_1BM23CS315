@@ -1,0 +1,101 @@
+# -----------------------------------
+# Step 1: Upload File in Google Colab
+# -----------------------------------
+from google.colab import files
+uploaded = files.upload()
+
+# Import libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+
+# Models
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+
+# Metrics
+from sklearn.metrics import (
+    accuracy_score, confusion_matrix,
+    mean_absolute_error, mean_squared_error
+)
+
+# =========================================================
+# 1. Decision Tree Classification - IRIS Dataset
+# =========================================================
+print("===== IRIS DATASET =====")
+
+iris = pd.read_csv("iris.csv")
+
+X = iris.iloc[:, :-1]
+y = iris.iloc[:, -1]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+dt_iris = DecisionTreeClassifier(random_state=42)
+dt_iris.fit(X_train, y_train)
+
+y_pred = dt_iris.predict(X_test)
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+
+
+# =========================================================
+# 2. Decision Tree Classification - DRUG Dataset
+# =========================================================
+print("\n===== DRUG DATASET =====")
+
+drug = pd.read_csv("drug.csv")
+
+# Encode categorical columns
+le = LabelEncoder()
+
+for col in drug.columns:
+    if drug[col].dtype == 'object':
+        drug[col] = le.fit_transform(drug[col])
+
+X = drug.iloc[:, :-1]
+y = drug.iloc[:, -1]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+dt_drug = DecisionTreeClassifier(random_state=42)
+dt_drug.fit(X_train, y_train)
+
+y_pred = dt_drug.predict(X_test)
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+
+
+# =========================================================
+# 3. Decision Tree Regression - Petrol Consumption
+# =========================================================
+print("\n===== PETROL CONSUMPTION DATASET =====")
+
+petrol = pd.read_csv("petrol_consumption.csv")
+
+X = petrol.iloc[:, :-1]
+y = petrol.iloc[:, -1]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+dt_reg = DecisionTreeRegressor(random_state=42)
+dt_reg.fit(X_train, y_train)
+
+y_pred = dt_reg.predict(X_test)
+
+# Error Metrics
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+
+print("Mean Absolute Error (MAE):", mae)
+print("Mean Squared Error (MSE):", mse)
+print("Root Mean Squared Error (RMSE):", rmse)
