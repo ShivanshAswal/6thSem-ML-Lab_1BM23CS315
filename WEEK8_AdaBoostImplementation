@@ -1,0 +1,82 @@
+# -----------------------------------
+# Step 1: Upload File in Google Colab
+# -----------------------------------
+from google.colab import files
+uploaded = files.upload()
+
+# -----------------------------------
+# Step 2: Import Libraries
+# -----------------------------------
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.metrics import accuracy_score
+
+# -----------------------------------
+# Step 3: Load Dataset
+# -----------------------------------
+data = pd.read_csv("income.csv")
+
+# Clean column names (important)
+data.columns = data.columns.str.strip()
+
+print("Dataset Columns:\n", data.columns)
+print("\nDataset Preview:\n", data.head())
+
+# -----------------------------------
+# Step 4: Data Preprocessing
+# -----------------------------------
+
+# Encode categorical variables (if any)
+le = LabelEncoder()
+for col in data.columns:
+    if data[col].dtype == 'object':
+        data[col] = le.fit_transform(data[col])
+
+# Features and target
+X = data.drop("income_level", axis=1)
+y = data["income_level"]
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+# -----------------------------------
+# Step 5: AdaBoost (n_estimators = 10)
+# -----------------------------------
+model = AdaBoostClassifier(n_estimators=10, random_state=42)
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\nAccuracy with 10 estimators:", accuracy)
+
+# -----------------------------------
+# Step 6: Fine-Tuning
+# -----------------------------------
+best_score = 0
+best_n = 0
+
+print("\nTuning Results:\n")
+
+for n in range(10, 101, 10):
+    model = AdaBoostClassifier(n_estimators=n, random_state=42)
+    model.fit(X_train, y_train)
+    
+    y_pred = model.predict(X_test)
+    score = accuracy_score(y_test, y_pred)
+    
+    print(f"Estimators: {n}, Accuracy: {score}")
+    
+    if score > best_score:
+        best_score = score
+        best_n = n
+
+# -----------------------------------
+# Step 7: Final Output
+# -----------------------------------
+print("\nBest Accuracy Achieved:", best_score)
+print("Best Number of Estimators:", best_n)
