@@ -1,0 +1,105 @@
+# -----------------------------------
+# Step 1: Upload File in Google Colab
+# -----------------------------------
+from google.colab import files
+uploaded = files.upload()
+
+# Import libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+# Load dataset
+iris = pd.read_csv("iris.csv")
+
+# Features and target
+X = iris.iloc[:, :-1]
+y = iris.iloc[:, -1]
+
+# Train-test split (80-20)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# ---- Linear Kernel ----
+svm_linear = SVC(kernel='linear')
+svm_linear.fit(X_train, y_train)
+
+y_pred_linear = svm_linear.predict(X_test)
+
+print("=== Linear Kernel ===")
+print("Accuracy:", accuracy_score(y_test, y_pred_linear))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_linear))
+
+
+# ---- RBF Kernel ----
+svm_rbf = SVC(kernel='rbf')
+svm_rbf.fit(X_train, y_train)
+
+y_pred_rbf = svm_rbf.predict(X_test)
+
+print("\n=== RBF Kernel ===")
+print("Accuracy:", accuracy_score(y_test, y_pred_rbf))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_rbf))
+
+
+
+# Import libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve, auc
+import matplotlib.pyplot as plt
+
+# Load dataset
+data = pd.read_csv("letter-recognition.csv")
+
+# Features and target
+X = data.iloc[:, 1:]
+y = data.iloc[:, 0]
+
+# Convert labels to binary format (for ROC)
+classes = np.unique(y)
+y_bin = label_binarize(y, classes=classes)
+
+# Train-test split
+X_train, X_test, y_train, y_test, y_train_bin, y_test_bin = train_test_split(
+    X, y, y_bin, test_size=0.2, random_state=42
+)
+
+# Train SVM (probability=True needed for ROC)
+svm = SVC(kernel='rbf', probability=True)
+svm.fit(X_train, y_train)
+
+# Predictions
+y_pred = svm.predict(X_test)
+y_score = svm.predict_proba(X_test)
+
+# Accuracy & Confusion Matrix
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+
+# ---- ROC & AUC ----
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+
+for i in range(len(classes)):
+    fpr[i], tpr[i], _ = roc_curve(y_test_bin[:, i], y_score[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+
+# Plot ROC curves
+plt.figure(figsize=(10, 6))
+
+for i in range(len(classes)):
+    plt.plot(fpr[i], tpr[i], label=f'Class {classes[i]} (AUC = {roc_auc[i]:.2f})')
+
+plt.plot([0, 1], [0, 1], 'k--')  # diagonal line
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve for Letter Recognition (SVM)')
+plt.legend()
+plt.show()
